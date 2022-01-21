@@ -8,10 +8,10 @@ import cv2
 import matplotlib.pyplot as plt
 
 # load trained model
-model = load_model('model/LSTM_RNN.h5')
+model = load_model('model/Complex.h5')
 
 # load the image, convert to grayscale, and apply blur
-image = cv2.imread('data/test_images/test.jpg')
+image = cv2.imread('data/test_images/2.jpg')
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 
@@ -21,7 +21,7 @@ blurred = cv2.GaussianBlur(gray, (5, 5), 0)
 #edged = cv2.Canny(blurred, lowThresh, high_thresh)
 
 # apply binary thresholding
-ret, thresh = cv2.threshold(blurred, 150, 255, cv2.THRESH_BINARY_INV)
+ret, thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
 
 # extract contours from the binary image
 cnts, hierarchy = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -46,16 +46,16 @@ for c in cnts:
     
     # if the width is greater than the height, resize along the width dimension
     if tW > tH:
-        thresh = imutils.resize(thresh, width=36)
+        thresh = imutils.resize(thresh, width=28)
     else:
-        thresh = imutils.resize(thresh, height=36)
+        thresh = imutils.resize(thresh, height=28)
         
     # retrieve resized dims and pad determine if padding is necessary
     (tH, tW) = thresh.shape
-    dX = int(max(0, 36 - tW) / 2.0)
-    dY = int(max(0, 36 - tH) / 2.0)
+    dX = int(max(0, 28 - tW) / 2.0)
+    dY = int(max(0, 28 - tH) / 2.0)
     
-    # pad the image and force 32x32 dimensions
+    # pad the image and force 28x28 dimensions
     padded = cv2.copyMakeBorder(thresh,
                                 top=dY,
                                 bottom=dY,
@@ -64,7 +64,7 @@ for c in cnts:
                                 borderType=cv2.BORDER_CONSTANT,
                                 value=(0, 0, 0))
     
-    padded = cv2.resize(padded, (36, 36))
+    padded = cv2.resize(padded, (28, 28))
     
     # perform final preprocessing for OCR
     padded = padded.astype("float32") / 255.0
@@ -81,9 +81,8 @@ chars = np.array([c[0] for c in chars], dtype="float32")
 preds = model.predict(chars)
 
 # define the list of label names
-labelNames = "0123456789"
-labelNames += "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-labelNames = [l for l in labelNames]
+alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+labelNames = [l for l in alpha]
 
 # loop over the predictions and bounding box locations together
 for (pred, (x, y, w, h)) in zip(preds, boxes):
@@ -98,5 +97,6 @@ for (pred, (x, y, w, h)) in zip(preds, boxes):
     cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
     cv2.putText(image, label, (x - 10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 2)
     
-# show the image
-cv2.imshow("Image", image)
+    # show the image
+    cv2.imshow("Image", image)
+    cv2.waitKey(0)
