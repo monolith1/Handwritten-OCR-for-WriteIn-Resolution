@@ -1,0 +1,5 @@
+streamlit
+streamlit_drawable_canvas
+tensorflow
+imutils
+opencv-python

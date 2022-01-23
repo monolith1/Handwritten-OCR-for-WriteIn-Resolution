@@ -11,7 +11,6 @@ from imutils.contours import sort_contours
 import numpy as np
 import imutils
 import cv2
-import matplotlib.pyplot as plt
 
 # Global Variables for classification
 
