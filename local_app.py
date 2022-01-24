@@ -2,39 +2,44 @@
 from tensorflow.keras.models import load_model
 from imutils.contours import sort_contours
 import argparse
+import pandas as pd
 import numpy as np
 import imutils
 import cv2
 import matplotlib.pyplot as plt
-
-
+import os
 
 # construct argument parser for test image path
 ap = argparse.ArgumentParser()
-ap.add_argument("-i", "--image", required=True,
-    help="path to input image")
-args = vars(ap.parse_args())
-
-
+ap.add_argument("-i", "--input", type=str, required=True, help="path to input image folder")
+ap.add_argument("-o", "--output", type=str, required=True, help="path to output image folder")
+ap.add_argument("-c", "--candidates", type=str, required=True, nargs='+', help='registered candidates for this contest')
+args = ap.parse_args()
 
 # Global Variables
 
-# Load image
-img = cv2.imread(args["image"])
+# in and out paths
+in_path = args.input
+print(in_path)
+out_path = args.output
+print(out_path)
+
+# Define list of candidate names
+target_names = args.candidates
+
+# Create container dataframe
+df = pd.DataFrame(0, index=target_names, columns=['votes'])
+df2 = pd.DataFrame(0, index=[0, 1], columns=['votes'])
+results = df.append(df2)
 
 # load trained model
 model = load_model('model/Complex_PostZoomFix.h5')
 
 # Define minimum similarity between result and target candidate name before unresolved status invoked
-min_sim = 0.6
+min_sim = 0.3
 
 # Define minimum brightness as percent
 min_brightness = 0.75
-
-# Define list of candidate names
-target_names = ['Abraham Lincoln', 'George Washington', 'Benjamin Franklin', 'Jefferson Smith']
-
-
 
 # define functions
 
@@ -86,7 +91,7 @@ def extract_contours(img):
     return cnts, thresh
 
 # extract correctly formatted images of each character
-def extract_characters(cnts, image):
+def extract_characters(cnts, img):
     
     # initialize the list of boxes and associated characters
     chars = []
@@ -98,10 +103,10 @@ def extract_characters(cnts, image):
         (x, y, w, h) = cv2.boundingRect(c)
 
         # filter out very large and very small boxes
-        if ((image.shape[1] * 0.01) <=  w <= (image.shape[1] * 0.7)) and ((image.shape[0] * 0.03)<= h <= (image.shape[0] * 0.7)):
+        if ((img.shape[1] * 0.01) <=  w <= (img.shape[1] * 0.4)) and ((img.shape[0] * 0.03)<= h <= (img.shape[0] * 0.9)):
 
             # extract the character and threshold as white on black and retrieve dimensions
-            roi = image[y:y + h, x:x + w]
+            roi = img[y:y + h, x:x + w]
             thresh = cv2.threshold(roi, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
             (tH, tW) = thresh.shape
 
@@ -140,7 +145,7 @@ def extract_characters(cnts, image):
     return boxes, chars
 
 # produce predictions
-def predict(boxes, chars, image=img, model=model):
+def predict(boxes, chars, img, model):
 
     # OCR the characters using our handwriting recognition model
     preds = model.predict(chars)
@@ -164,11 +169,11 @@ def predict(boxes, chars, image=img, model=model):
         pred_name += label
         
         # draw the prediction on the image
-        print("[INFO] {} - {:.2f}%".format(label, prob * 100))
-        cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        cv2.putText(image, label, (x - 10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 2)
+        # print("[INFO] {} - {:.2f}%".format(label, prob * 100))
+        cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        cv2.putText(img, label, (x - 10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 2)
     
-    return image, pred_name
+    return img, pred_name
 
 # calculate the Levenshtein Distance between two strings
 def levenshteinDistance(s1, s2):
@@ -212,22 +217,41 @@ def result(pred_name, target_names=target_names, min_sim=min_sim):
             result = target_names[i]
             min_sim = similarity     
             
-    if result != 0 and result != 1:
-        print(f'Vote for {result} {min_sim}')
-    else:
-        print(f'Reroute to judges {result} {min_sim}')
     return result
 
+# loop over images in input directory
+for filename in os.listdir(in_path):
+    
+    # instantiate container for unresolved files
+    unresolved = []
+    
+    # parse filepath
+    print(filename)
+    f = os.path.join(in_path, filename)
+    
+    # load image
+    img = cv2.imread(f)
+    
+    # pass thru processing and prediction functions
+    blurred = preprocess(img)
+    bright = brightness(blurred)
+    cnts, thresh = extract_contours(bright)
+    boxes, chars = extract_characters(cnts, blurred)
+    res_img, pred = predict(boxes, chars, img, model)
+    res = result(pred)
+    
+    # add result to tally
+    results.loc[res] += 1
+    
+    # if result couldn't be resolved, add filename to list
+    if res == 0 or res == 1:
+        unresolved.append(filename)
+        cv2.imwrite(f'{out_path}/{filename}', res_img)
+        
+# write csv of results        
+results.to_csv(f'{out_path}/batch_results.csv')
 
-
-# Action!
-blurred = preprocess(img)
-bright = brightness(blurred)
-cnts, thresh = extract_contours(bright)
-boxes, chars = extract_characters(cnts, blurred)
-res_img, pred = predict(boxes, chars)
-result = result(pred)
-
-# show the resultant image
-cv2.imshow("Image", res_img)
-cv2.waitKey(0)
+# convert list of unresolved to series and write to csv
+print('Unresolved image files: ', unresolved)
+unresolved_series = pd.Series(unresolved, dtype='float64')
+unresolved_series.to_csv(f'{out_path}/unresolved.csv')

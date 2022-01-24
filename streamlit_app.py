@@ -37,10 +37,10 @@ st.subheader('Please vote for your favourite food: ramen, pizza, shawarma, or sp
 
 # slider for min similarity threshold
 min_sim = st.slider(label='Minimum similarity threshold:',
-          min_value = 0.5,
+          min_value = 0.0,
           max_value = 1.0,
-          value = 0.6,
-          step = 0.05)
+          value = 0.4,
+          step = 0.1)
              
 # Create a canvas component
 canvas_result = st_canvas(
@@ -115,7 +115,7 @@ def extract_characters(cnts, image):
         (x, y, w, h) = cv2.boundingRect(c)
 
         # filter out very large and very small boxes
-        if ((image.shape[1] * 0.01) <=  w <= (image.shape[1] * 0.7)) and ((image.shape[0] * 0.03)<= h <= (image.shape[0] * 0.7)):
+        if ((image.shape[1] * 0.01) <=  w <= (image.shape[1] * 0.5)) and ((image.shape[0] * 0.03) <= h):
 
             # extract the character and threshold as white on black and retrieve dimensions
             roi = image[y:y + h, x:x + w]
@@ -171,6 +171,9 @@ def predict_drawn(boxes, chars, image, model=model):
     # convert image back to color
     image = cv2.cvtColor(image,cv2.COLOR_GRAY2RGB)
     
+    # add space to image in order to correctly render prediction boxes
+    im_padded = cv2.copyMakeBorder(image, 50, 0, 0, 0, cv2.BORDER_CONSTANT, value=[255,255,255])
+    
     # loop over the predictions and bounding box locations together
     for (pred, (x, y, w, h)) in zip(preds, boxes):
         
@@ -183,8 +186,8 @@ def predict_drawn(boxes, chars, image, model=model):
         pred_name += label
         
         # draw the prediction on the image
-        cv2.rectangle(image, (x, y+50), (x + w, y + h + 50), (0, 255, 0), 2)
-        cv2.putText(image, label, (x - 10, y + 40), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 2)
+        cv2.rectangle(im_padded, (x, y+50), (x + w, y + h + 50), (0, 255, 0), 2)
+        cv2.putText(im_padded, label, (x - 10, y + 40), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 2)
     
     return image, pred_name
 
@@ -200,6 +203,9 @@ def predict_upload(boxes, chars, image, model=model):
     # instantiate name string container 
     pred_name = ''
     
+    # add space to image in order to correctly render prediction boxes
+    im_padded = cv2.copyMakeBorder(image, 50, 0, 0, 0, cv2.BORDER_CONSTANT, value=[255,255,255])
+    
     # loop over the predictions and bounding box locations together
     for (pred, (x, y, w, h)) in zip(preds, boxes):
         
@@ -212,10 +218,10 @@ def predict_upload(boxes, chars, image, model=model):
         pred_name += label
         
         # draw the prediction on the image
-        cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        cv2.putText(image, label, (x - 10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 2)
+        cv2.rectangle(im_padded, (x, y+50), (x + w, y + h + 50), (0, 255, 0), 2)
+        cv2.putText(im_padded, label, (x - 10, y + 40), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 2)
     
-    return image, pred_name
+    return im_padded, pred_name
 
 # calculate the Levenshtein Distance between two strings
 def levenshteinDistance(s1, s2):
@@ -270,9 +276,6 @@ def classify_drawn(image):
     cnts, thresh = extract_contours(image)
     boxes, chars = extract_characters(cnts, image)
     
-    # add space to image in order to correctly render prediction boxes
-    im_padded = cv2.copyMakeBorder(image.copy(), 50, 0, 0, 0, cv2.BORDER_CONSTANT, value=[255,255,255])
-    
     res_img, pred_name = predict_drawn(boxes, chars, im_padded)
     res, min_sim = result(pred_name)
     
@@ -288,13 +291,7 @@ def classify_upload(image):
     res, min_sim = result(pred_name)
     return res_img, res, min_sim
 
-# Submission button for drawn
-if st.button(label='Submit'):
-    res_img, res, min_sim = classify_drawn(canvas_result.image_data)
-    
-    # instantiate results from csv
-    results = pd.read_csv('data/results/results.csv', index_col=0)
-    
+def results_display(res):
     if res == 1:
         st.write("I can't resolve this to a candidate because there are two candidates with equal similarity to what was written. This is how the image was interpreted:")
         st.image(res_img)
@@ -311,6 +308,15 @@ if st.button(label='Submit'):
         results.to_csv('data/results/results.csv')
     
     st.bar_chart(results)
+
+# Submission button for drawn
+if st.button(label='Submit'):
+    res_img, res, min_sim = classify_drawn(canvas_result.image_data)
+    
+    # instantiate results from csv
+    results = pd.read_csv('data/results/results.csv', index_col=0)
+    
+    results_display(res)
     
 # Submission button for upload
 
@@ -326,21 +332,6 @@ if img_file_buffer is not None:
     # instantiate results from csv
     results = pd.read_csv('data/results/results.csv', index_col=0)
     
-    if res == 1:
-        st.write("I can't resolve this to a candidate because there are two candidates with equal similarity to what was written. This is how the image was interpreted:")
-        st.image(res_img)
-        st.write('No votes were recorded.')
-    elif res == 0:
-        st.write("I can't resolve this to a candidate because no candidates were above the similarity threshold. This is how the image was interpreted:")
-        st.image(res_img)
-        st.write('No votes were recorded.')
-    else:
-        st.write(f'The similarity between what was written and the closest candidate is {round(min_sim*100,2)}%. This is how the image was interpreted:')
-        st.image(res_img)
-        st.write(f'One vote has been recorded for {res}.')
-        results.loc[res] += 1
-        results.to_csv('data/results/results.csv')
-    
-    st.bar_chart(results)
+    results_display(res)
     
 st.write('For more information, check out the github repo at https://github.com/monolith1/Handwritten-OCR-for-WriteIn-Resolution')
