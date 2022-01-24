@@ -189,7 +189,7 @@ def predict_drawn(boxes, chars, image, model=model):
         cv2.rectangle(im_padded, (x, y+50), (x + w, y + h + 50), (0, 255, 0), 2)
         cv2.putText(im_padded, label, (x - 10, y + 40), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 2)
     
-    return image, pred_name
+    return im_padded, pred_name
 
 def predict_upload(boxes, chars, image, model=model):
 
@@ -276,7 +276,7 @@ def classify_drawn(image):
     cnts, thresh = extract_contours(image)
     boxes, chars = extract_characters(cnts, image)
     
-    res_img, pred_name = predict_drawn(boxes, chars, image)
+    res_img, pred_name = predict_drawn(boxes, chars, image.copy())
     res, min_sim = result(pred_name)
     
     return res_img, res, min_sim
@@ -291,7 +291,7 @@ def classify_upload(image):
     res, min_sim = result(pred_name)
     return res_img, res, min_sim
 
-def results_display(res):
+def results_display(res, res_img):
     if res == 1:
         st.write("I can't resolve this to a candidate because there are two candidates with equal similarity to what was written. This is how the image was interpreted:")
         st.image(res_img)
@@ -316,7 +316,7 @@ if st.button(label='Submit'):
     # instantiate results from csv
     results = pd.read_csv('data/results/results.csv', index_col=0)
     
-    results_display(res)
+    results_display(res, res_img)
     
 # Submission button for upload
 
@@ -332,6 +332,6 @@ if img_file_buffer is not None:
     # instantiate results from csv
     results = pd.read_csv('data/results/results.csv', index_col=0)
     
-    results_display(res)
+    results_display(res, res_img)
     
 st.write('For more information, check out the github repo at https://github.com/monolith1/Handwritten-OCR-for-WriteIn-Resolution')
