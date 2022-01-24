@@ -276,7 +276,7 @@ def classify_drawn(image):
     cnts, thresh = extract_contours(image)
     boxes, chars = extract_characters(cnts, image)
     
-    res_img, pred_name = predict_drawn(boxes, chars, im_padded)
+    res_img, pred_name = predict_drawn(boxes, chars, image)
     res, min_sim = result(pred_name)
     
     return res_img, res, min_sim
