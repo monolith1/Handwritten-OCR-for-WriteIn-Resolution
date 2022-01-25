@@ -43,7 +43,8 @@ A demonstration of the functionality of this application is also available at ht
 
 This repository contains the following files:
 
-```├───data  
+```
+├───data  
 │   ├───batch_test_images  
 │   ├───results  
 │   └───test_images  
@@ -57,7 +58,8 @@ This repository contains the following files:
 ├───local_app.py  
 ├───README.md  
 ├───requirements.txt  
-└───streamlit_app.py```  
+└───streamlit_app.py
+```  
 
 The data folder contains:
 * **batch_test_images:** A series of images used to test the batch processing functionality. Each image containins a handwritten write-in vote from one of four categories: Ramen, Pizza, Shawarma, and Spaghetti. There are 20 votes for each category, totaling 80 images.
