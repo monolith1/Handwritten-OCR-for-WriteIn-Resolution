@@ -34,6 +34,7 @@ target_names = ['ramen', 'pizza', 'shawarma', 'spaghetti']
 # Title
 st.title('Automated Write-In Resolution')
 st.subheader('Please vote for your favourite food: ramen, pizza, shawarma, or spaghetti!')
+st.write('This demo works best with writing in all capital letters.')
 
 # slider for min similarity threshold
 min_sim = st.slider(label='Minimum similarity threshold:',
@@ -279,7 +280,7 @@ def classify_drawn(image):
     res_img, pred_name = predict_drawn(boxes, chars, image.copy())
     res, min_sim = result(pred_name)
     
-    return res_img, res, min_sim
+    return res_img, res, min_simweb.
 
 # container function for upload classification
 def classify_upload(image):
