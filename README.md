@@ -79,31 +79,42 @@ Also included in this repo:
 ### Feature Extraction
 
 When an image is passed to the application, it goes through several steps of preprocessing. Below, we will follow a single example through the preprocessing stage.
+
 ![Initial Image](data/test_images/5-Initial.jpg "Initial Image")
+
 1. First, the image is converted to grayscale and a gaussian blur is applied to remove noise.
+
 ![Blurred](data/test_images/5-Blurred.jpg "Blurred")
+
 2. The image is then checked to see if it is bright enough to extract characters. If not, brightness is scaled up.
+
 ![Bright](data/test_images/5-Bright.jpg "Bright")
+
 3. The image is converted to a threshold image by applying [Otsu's Thresholding](https://en.wikipedia.org/wiki/Otsu%27s_method). This separates the pixels in the image into two classes - background and foreground.
+
 ![Threshold](data/test_images/5-Thresh.jpg "Threshold")
+
 4. Using the threshold image, external contours of each character are found and isolated.
+
 ![Contour](data/test_images/5-Cont.jpg "Contour")
+
 5. Contours are processed into 'boxes' - areas of the image that contain a single character. These boxes are passed through a size filter to ensure they are actual characters. The boxes are then passed to the classifier model for classification.
+
 ![Boxes](data/test_images/5-Box.jpg "Boxes")
 
 ### Modeling
 
 The model used for classifying extracted characters as letters was trained on the [NIST Special Database 19](https://www.nist.gov/srd/nist-special-database-19). The dataset contains 810,000 unique images of handwritten characters from 3600 unique writers. Initially, the dataset was fed unmodified to a simple [Multilayer Perceptron feed-forward artificial neural network](https://en.wikipedia.org/wiki/Multilayer_perceptron). This produced an impressive training accuracy of **99.6%**. However, when validated against data that the model hasn't seen, it produced a less satisfactory accuracy of **98.31%**. 
 
-![Simple Model Accuracy and Loss](hist/Basic.pdf "Simple Model Accuracy and Loss")
+![Simple Model Accuracy and Loss](hist/Basic.jpg "Simple Model Accuracy and Loss")
 
 In order to get the model to generalize better to data that it hasn't seen, augmentation was applied to the training images. In other words, images were rotated, zoomed, shifted, and sheared in order to increase the variance in training data. Both training and validation accuracy were decreased, but the model was now able to generalize to new data.
 
-![Simple Augmented Model Accuracy and Loss](hist/Basic_AugInput.pdf "Simple Augmented Model Accuracy and Loss")
+![Simple Augmented Model Accuracy and Loss](hist/Basic_AugInput.jpg "Simple Augmented Model Accuracy and Loss")
 
 Finally, in order to maintain both good accuracy and good generalization to new data, a more complex model was introduced. This model employs [Convolutional Neural Network](https://en.wikipedia.org/wiki/Convolutional_neural_network) layers in order to extract features from the characters presented to it, as well as [Long Short-term Memory](https://en.wikipedia.org/wiki/Long_short-term_memory) (a type of [Recurrent Neural Network](https://en.wikipedia.org/wiki/Recurrent_neural_network)) layers in order to contextualize feature sequences. By training on augmented input images as described above, the model was able to reach convergence between training and validation data. The final training accuracy was **99.37%** and the final validation accuracy was **99.43%**. Impressively, accuracy while testing on unseen NIST SD19 images reached **100%**.
 
-![Complex Augmented Model Accuracy and Loss](hist/Complex_PostZoomFix.pdf "Complex Augmented Model Accuracy and Loss")
+![Complex Augmented Model Accuracy and Loss](hist/Complex_PostZoomFix.jpg "Complex Augmented Model Accuracy and Loss")
  
 Using the complex model trained on augmented input, predictions are made on each character image.
 
@@ -111,7 +122,7 @@ Using the complex model trained on augmented input, predictions are made on each
 
 ### <a name="similarity"></a> Candidate Resolution
 
-By extracting the coordinates of each image during the feature extraction phase, the app orders the classified characters from left to right. These characters are joined in order to produce the classifications on string level, rather than character level. Inevitably, due to the amount of variance in handwritten text, some characters will be misclassified. The complete classification is compared against all of the valid candidates. This comparison is done using [Levenshtein Distance] - a method of comparing the similarity of two strings of characters. In this application, the distance has been normalized by sequence length in order to reduce sensitivity to longer sequences.
+By extracting the coordinates of each image during the feature extraction phase, the app orders the classified characters from left to right. These characters are joined in order to produce the classifications on string level, rather than character level. Inevitably, due to the amount of variance in handwritten text, some characters will be misclassified. The complete classification is compared against all of the valid candidates. This comparison is done using [Levenshtein Distance](https://en.wikipedia.org/wiki/Levenshtein_distance) - a method of comparing the similarity of two strings of characters. In this application, the distance has been normalized by sequence length in order to reduce sensitivity to longer sequences.
 
 The normalized Levenshtein Distance is referred to in this app as the **similarity** between the presented candidate name and the possible candidate names. The app employs a **minimum similarity threshold**, whereby classifications must exceed a certain similarity score in order to be sent to tally. This is in response to a characteristic of the problem domain - **classifications made below a certain degree of certainty must be reviewed by a human, in order to maintain election integrity.**
 
