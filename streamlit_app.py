@@ -280,7 +280,7 @@ def classify_drawn(image):
     res_img, pred_name = predict_drawn(boxes, chars, image.copy())
     res, min_sim = result(pred_name)
     
-    return res_img, res, min_simweb.
+    return res_img, res, min_sim
 
 # container function for upload classification
 def classify_upload(image):
