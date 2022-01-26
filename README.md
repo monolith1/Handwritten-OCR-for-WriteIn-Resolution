@@ -2,7 +2,7 @@
 
 Automation of the election write-in adjudication process via interpretable optical character recognition.
 
-![Process Image from OCR](data/test_images/7-output.jpg "Process Image from OCR")
+![Process Image from OCR](data/test_images/7-Cont.jpg "Process Image from OCR")
 
 ## Problem Domain
 
@@ -101,7 +101,7 @@ When an image is passed to the application, it goes through several steps of pre
 
 ### Modeling
 
-The model used for classifying extracted characters as letters was trained on the [NIST Special Database 19](https://www.nist.gov/srd/nist-special-database-19). The dataset contains 810,000 unique images of handwritten characters from 3600 unique writers. Initially, the dataset was fed unmodified to a simple [Multilayer Perceptron feed-forward artificial neural network](https://en.wikipedia.org/wiki/Multilayer_perceptron). This produced an impressive training accuracy of **99.6%**. However, when validated against data that the model hasn't seen, it produced a less satisfactory accuracy of **98.31%**. 
+The model used for classifying extracted characters as letters was trained on the [NIST Special Database 19](https://www.nist.gov/srd/nist-special-database-19). The dataset contains 810,000 unique images of handwritten characters from 3600 unique writers. The dataset was used to train a [Multilayer Perceptron feed-forward artificial neural network](https://en.wikipedia.org/wiki/Multilayer_perceptron). The model produced an impressive training accuracy of **99.6%**. When validated against data that the model hasn't seen, it produced an accuracy of **98.31%**. 
 
 ![Simple Model Accuracy and Loss](hist/Basic.jpg "Simple Model Accuracy and Loss")
 
@@ -109,7 +109,7 @@ In order to get the model to generalize better to data that it hasn't seen, augm
 
 ![Simple Augmented Model Accuracy and Loss](hist/Basic_AugInput.jpg "Simple Augmented Model Accuracy and Loss")
 
-Finally, in order to maintain both good accuracy and good generalization to new data, a more complex model was introduced. This model employs [Convolutional Neural Network](https://en.wikipedia.org/wiki/Convolutional_neural_network) layers in order to extract features from the characters presented to it, as well as [Long Short-term Memory](https://en.wikipedia.org/wiki/Long_short-term_memory) (a type of [Recurrent Neural Network](https://en.wikipedia.org/wiki/Recurrent_neural_network)) layers in order to contextualize feature sequences. By training on augmented input images as described above, the model was able to reach convergence between training and validation data. The final training accuracy was **99.37%** and the final validation accuracy was **99.43%**. Impressively, accuracy while testing on unseen NIST SD19 images reached **100%**.
+Finally, in order to maintain both good accuracy and good generalization to new data, a more complex model was introduced. This model employs [Convolutional Neural Network](https://en.wikipedia.org/wiki/Convolutional_neural_network) layers in order to extract features from the characters presented to it, as well as [Long Short-term Memory](https://en.wikipedia.org/wiki/Long_short-term_memory) (a type of [Recurrent Neural Network](https://en.wikipedia.org/wiki/Recurrent_neural_network)) layers in order to contextualize feature sequences. By training on augmented input images as described above, the model was able to reach convergence between training and validation data. The final training accuracy was **99.37%** and the final validation accuracy was **99.43%**.
 
 ![Complex Augmented Model Accuracy and Loss](hist/Complex_PostZoomFix.jpg "Complex Augmented Model Accuracy and Loss")
  
