@@ -27,15 +27,15 @@ For this project, I've tapped my experience working with election systems in the
 
 In order to run this application, navigate to the project folder and run the following command:
 
-`python local_app.py -i <path to input images folder> -o <path to results output folder> -c <candidate options separated by spaces>`
+`python app.py -i <path to input images folder> -o <path to results output folder> -c <candidate options separated by spaces>`
 
 For example, to run the test batch images, you can use the command:
 
-`python local_app.py -i data/batch_test_images -o data/results -c Ramen Pizza Shawarma Spaghetti`
+`python app.py -i data/batch_test_images -o data/results -c Ramen Pizza Shawarma Spaghetti`
 
 The input images should include only the write-in text. For the best results, the text should be printed in all capital letters. The application will produce two files in the results folder - **batch_results.csv** containing the tally and **unresolved.csv** containing the filenames of images that could not be resolved. Process images from unresolved inputs will also be placed in the results folder.
 
-A demonstration of the functionality of this application is also available at https://share.streamlit.io/monolith1/handwritten-ocr-for-writein-resolution/main. This demonstration visualizes how the application performs classification. It also allows the user to see how the results vary based on different settings for the [minimum similarity score](#similarity).
+A demonstration of the functionality of this application is also available at https://share.streamlit.io/monolith1/handwritten-ocr-for-writein-resolution/main. This demonstration visualizes how the application performs classification. It also allows the user to see how the results vary based on different settings for the [minimum similarity threshold](#similarity).
 
 ![Demonstration App](data/test_images/demo.jpg "Demonstration App Screenshot")
 
@@ -52,10 +52,7 @@ This repository contains the following files:
 ├───model  
 ├───.gitignore  
 ├───app.ipynb  
-├───Basic_Modeling.ipynb  
-├───Basic_Modeling_AugInput.ipynb  
-├───Complex_Modeling.ipynb  
-├───local_app.py  
+├───app.py  
 ├───README.md  
 ├───requirements.txt  
 └───streamlit_app.py
@@ -67,10 +64,10 @@ The data folder contains:
 * **test_images:** A folder containing handwritten images for general functionality testing. This folder also contains sample imagery referenced in this readme doc.
 
 Also included in this repo:
-* **hist** contains the pickled model training history files, as well as a plot of training accuracy and loss vs. epoch, from each model tested. These are included for reference.
+* **hist** contains the pickled model training history files, as well as a plot of training accuracy and loss vs. epoch, from each model tested. It also contains the notebooks that were used to create the models. These are included for reference.
 * **model** contains each of the trained models. It is recommended to always use *Complex_PostZoomFix.h5*
-* There are four **.ipynb** files in the main directory. These were used for model and app development, respectively. They have been included for reference.
-* **local_app.py** is the main CLI application.
+* **app.ipynb** was used to model the application. It has been included for reference.
+* **app.py** is the main CLI application.
 * **streamlit_app.py** is the streamlit demo application.
 * **requirements.txt** contains the environment requirements to run the application.
 
@@ -80,7 +77,7 @@ Also included in this repo:
 
 When an image is passed to the application, it goes through several steps of preprocessing. Below, we will follow a single example through the preprocessing stage.
 
-![Initial Image](data/test_images/5-Initial.jpg "Initial Image")
+![Initial Image](data/test_images/5-Img.jpg "Initial Image")
 
 1. First, the image is converted to grayscale and a gaussian blur is applied to remove noise.
 
