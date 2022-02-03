@@ -55,7 +55,8 @@ This repository contains the following files:
 ├───app.py  
 ├───README.md  
 ├───requirements.txt  
-└───streamlit_app.py
+├───streamlit_app.py
+└───WriteinResolution.pptx
 ```  
 
 The data folder contains:
@@ -70,6 +71,7 @@ Also included in this repo:
 * **app.py** is the main CLI application.
 * **streamlit_app.py** is the streamlit demo application.
 * **requirements.txt** contains the environment requirements to run the application.
+* **WriteinResolution.pptx** contains presentation slides detailing the project.
 
 ## How does it work?
 
