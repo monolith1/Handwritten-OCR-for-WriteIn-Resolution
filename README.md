@@ -2,7 +2,7 @@
 
 Automation of the election write-in adjudication process via interpretable optical character recognition.
 
-![Process Image from OCR](data/test_images/7-Cont.jpg "Process Image from OCR")
+![Process Image from OCR](data/test_images/9-Cont.jpg "Process Image from OCR")
 
 ## Problem Domain
 
@@ -35,7 +35,7 @@ For example, to run the test batch images, you can use the command:
 
 The input images should include only the write-in text. For the best results, the text should be printed in all capital letters. The application will produce two files in the results folder - **batch_results.csv** containing the tally and **unresolved.csv** containing the filenames of images that could not be resolved. Process images from unresolved inputs will also be placed in the results folder.
 
-A demonstration of the functionality of this application is also available at https://share.streamlit.io/monolith1/handwritten-ocr-for-writein-resolution/main. This demonstration visualizes how the application performs classification. It also allows the user to see how the results vary based on different settings for the [minimum similarity threshold](#similarity).
+A demonstration of the technology employed in this application is also available at https://share.streamlit.io/monolith1/handwritten-ocr-for-writein-resolution/main. This demonstration visualizes how the application performs classification. It also allows the user to see how the results vary based on different settings for the [minimum similarity threshold](#similarity).
 
 ![Demonstration App](data/test_images/demo.jpg "Demonstration App Screenshot")
 
